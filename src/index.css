@@ -932,8 +932,79 @@ body {
   box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
 }
 
-.table-responsive {
-  max-height: 500px;
-  overflow: auto;
+/* Mobile Responsiveness Improvements */
+@media (max-width: 640px) {
+  .main-header {
+    padding: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .header-badge {
+    align-self: flex-start;
+  }
+  
+  .main-content {
+    padding: 1rem;
+  }
+  
+  .tool-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tool-header .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    max-width: 100%;
+  }
+
+  .stats-badges {
+    flex-wrap: wrap;
+  }
+
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+
+  .modal-container {
+    max-height: 96vh;
+    border-radius: 14px;
+  }
+
+  .modal-header {
+    padding: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .modal-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .paper-form {
+    padding: 1.25rem 0.85rem;
+  }
+
+  .fiscal-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .paper-title {
+    font-size: 1.1rem;
+  }
 }
+
 

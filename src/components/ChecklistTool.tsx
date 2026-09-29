@@ -207,7 +207,7 @@ export const ChecklistTool: React.FC<ChecklistToolProps> = ({ onBack }) => {
       </div>
 
       {/* Table Container */}
-      <div className="table-card">
+      <div className="table-card" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {loading ? (
           <div className="loading-state">Cargando registros...</div>
         ) : filteredRecords.length === 0 ? (
@@ -220,7 +220,7 @@ export const ChecklistTool: React.FC<ChecklistToolProps> = ({ onBack }) => {
             </button>
           </div>
         ) : (
-          <table className="custom-table">
+          <table className="custom-table" style={{ minWidth: '650px' }}>
             <thead>
               <tr>
                 <th>MES / AÑO</th>
