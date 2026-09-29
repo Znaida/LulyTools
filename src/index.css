@@ -819,3 +819,121 @@ body {
   font-size: 0.8rem;
   border-top: 1px solid var(--border-color);
 }
+
+/* GICR Lotes Tool Styles */
+.upload-card {
+  background: var(--bg-card);
+  border: 2px dashed rgba(236, 72, 153, 0.4);
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(10px);
+}
+.upload-card:hover {
+  border-color: var(--primary-pink);
+  background: var(--bg-card-hover);
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+}
+
+.upload-icon-wrapper {
+  width: 70px;
+  height: 70px;
+  border-radius: 20px;
+  background: var(--gradient-card);
+  border: 1px solid rgba(236, 72, 153, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-text h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+.upload-text p {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.error-banner {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.result-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.success-banner {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #4ade80;
+  padding: 1rem 1.25rem;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.tabs-header {
+  display: flex;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+  overflow-x: auto;
+}
+
+.tab-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 0.6rem 1.1rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.tab-active {
+  background: var(--gradient-main);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+}
+
+.table-responsive {
+  max-height: 500px;
+  overflow: auto;
+}
+

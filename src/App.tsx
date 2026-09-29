@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChecklistTool } from './components/ChecklistTool';
+import { GicrLotesTool } from './components/GicrLotesTool';
 import { 
   ClipboardCheck, 
   Sparkles, 
@@ -33,6 +34,15 @@ export function App() {
       category: 'Gestión Mensual',
       isAvailable: true,
       tag: 'Principal'
+    },
+    {
+      id: 'gicr-lotes',
+      name: 'Procesador GIR_LOTES',
+      description: 'Limpia el archivo de lotes y genera resúmenes anuales de ventas, disponibles y pendientes por escriturar.',
+      icon: <FileSpreadsheet size={32} className="tool-icon-svg" />,
+      category: 'Reportes y Excel',
+      isAvailable: true,
+      tag: 'Nuevo'
     },
     {
       id: 'calculadora',
@@ -89,6 +99,8 @@ export function App() {
       <main className="main-content">
         {activeTool === 'checklist' ? (
           <ChecklistTool onBack={() => setActiveTool(null)} />
+        ) : activeTool === 'gicr-lotes' ? (
+          <GicrLotesTool onBack={() => setActiveTool(null)} />
         ) : (
           <div className="dashboard-home">
             <div className="welcome-banner">
