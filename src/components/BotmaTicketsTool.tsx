@@ -35,7 +35,9 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
-  Check
+  Check,
+  UserPlus,
+  Trash2
 } from 'lucide-react';
 import '../botma.css';
 
@@ -65,8 +67,15 @@ export const BotmaTicketsTool: React.FC<BotmaTicketsToolProps> = ({ onBack }) =>
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
   const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState<boolean>(false);
+  const [isAddTechModalOpen, setIsAddTechModalOpen] = useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
   const [isPhoneSimOpen, setIsPhoneSimOpen] = useState<boolean>(false);
+
+  // Form states for adding technician
+  const [newTechName, setNewTechName] = useState('');
+  const [newTechPhone, setNewTechPhone] = useState('52155');
+  const [newTechSpecialty, setNewTechSpecialty] = useState('');
+  const [newTechAvatar, setNewTechAvatar] = useState('👨‍💻');
 
   // Form states for approval/workflow
   const [assignTechId, setAssignTechId] = useState<string>('');
@@ -425,6 +434,79 @@ export const BotmaTicketsTool: React.FC<BotmaTicketsToolProps> = ({ onBack }) =>
     setNewReqName('');
     setNewDept('');
     setNewReason('');
+  };
+
+  // Handler: Add Technician
+  const handleAddTechnician = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTechName.trim() || !newTechSpecialty.trim()) {
+      showToast('Nombre y especialidad son campos obligatorios', 'error');
+      return;
+    }
+
+    const newTech: Technician = {
+      id: `tech-${Date.now()}`,
+      name: newTechName.trim(),
+      phone: newTechPhone.trim(),
+      specialty: newTechSpecialty.trim(),
+      avatar: newTechAvatar,
+      active: true,
+      activeTicketsCount: 0
+    };
+
+    const updated = [...technicians, newTech];
+    setTechnicians(updated);
+    localStorage.setItem(STORAGE_TECHS_KEY, JSON.stringify(updated));
+    showToast(`👨‍💻 ¡Técnico "${newTech.name}" registrado con éxito!`);
+    setIsAddTechModalOpen(false);
+
+    // Reset Form
+    setNewTechName('');
+    setNewTechSpecialty('');
+    setNewTechPhone('52155');
+    setNewTechAvatar('👨‍💻');
+  };
+
+  // Handler: Delete Technician
+  const handleDeleteTechnician = (tech: Technician) => {
+    let confirmMsg = `¿Estás seguro de que deseas eliminar al técnico "${tech.name}"?`;
+    if (tech.activeTicketsCount > 0) {
+      confirmMsg = `⚠️ El técnico "${tech.name}" tiene ${tech.activeTicketsCount} ticket(s) activo(s).\n\nSi lo eliminas, los tickets asignados pasarán a estado "Pendiente de Aprobación" para reasignar otro técnico.\n\n¿Deseas continuar?`;
+    }
+
+    const confirmed = window.confirm(confirmMsg);
+    if (!confirmed) return;
+
+    // Unassign technician from active tickets
+    const nowIso = new Date().toISOString();
+    const updatedTickets = tickets.map(t => {
+      if (t.technicianId === tech.id) {
+        return {
+          ...t,
+          technicianId: null,
+          technicianName: null,
+          technicianPhone: undefined,
+          status: (t.status === 'APPROVED' ? 'PENDING_APPROVAL' : t.status) as TicketStatus,
+          history: [
+            ...t.history,
+            {
+              timestamp: nowIso,
+              author: 'Sistema',
+              action: 'Técnico desvinculado',
+              details: `El técnico ${tech.name} fue eliminado del equipo. Ticket devuelto a revisión.`
+            }
+          ]
+        };
+      }
+      return t;
+    });
+    saveTickets(updatedTickets);
+
+    // Remove from technicians
+    const updatedTechs = technicians.filter(t => t.id !== tech.id);
+    setTechnicians(updatedTechs);
+    localStorage.setItem(STORAGE_TECHS_KEY, JSON.stringify(updatedTechs));
+    showToast(`Técnico "${tech.name}" eliminado del sistema.`, 'error');
   };
 
   // WhatsApp Smart Links Generator
@@ -1078,39 +1160,61 @@ export const BotmaTicketsTool: React.FC<BotmaTicketsToolProps> = ({ onBack }) =>
           VIEW 3: EQUIPO TÉCNICO
           ========================================================================== */}
       {currentView === 'technicians' && (
-        <section className="techs-grid">
-          {techniciansWithLoad.map(tech => (
-            <div key={tech.id} className="tech-card">
-              <div className="tech-card-top">
-                <div className="tech-avatar">{tech.avatar}</div>
-                <div className="tech-info">
-                  <h4>{tech.name}</h4>
-                  <p className="tech-specialty">{tech.specialty}</p>
+        <section>
+          {/* Header Toolbar para Técnicos */}
+          <div className="techs-header-bar">
+            <div className="techs-header-info">
+              <h3>Directorio de Especialistas ({techniciansWithLoad.length} técnicos)</h3>
+              <p>Monitoreo de carga de trabajo, disponibilidad y contacto directo vía WhatsApp.</p>
+            </div>
+            <button className="btn-botma-primary" onClick={() => setIsAddTechModalOpen(true)}>
+              <UserPlus size={16} /> Agregar Técnico
+            </button>
+          </div>
+
+          <div className="techs-grid">
+            {techniciansWithLoad.map(tech => (
+              <div key={tech.id} className="tech-card">
+                <div className="tech-card-top">
+                  <div className="tech-card-left">
+                    <div className="tech-avatar">{tech.avatar}</div>
+                    <div className="tech-info">
+                      <h4>{tech.name}</h4>
+                      <p className="tech-specialty">{tech.specialty}</p>
+                    </div>
+                  </div>
+                  <button 
+                    className="btn-delete-tech" 
+                    title={`Eliminar a ${tech.name}`}
+                    onClick={() => handleDeleteTechnician(tech)}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+
+                <div className="tech-load-indicator">
+                  <span>Carga de trabajo:</span>
+                  <span className={`load-badge ${
+                    tech.activeTicketsCount === 0 ? 'free' : tech.activeTicketsCount <= 2 ? 'busy' : 'high'
+                  }`}>
+                    {tech.activeTicketsCount} tickets activos
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
+                  <a 
+                    href={`https://wa.me/${tech.phone.replace(/[^0-9]/g, '')}`} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="wa-link-btn"
+                    style={{ width: '100%', justifyContent: 'center' }}
+                  >
+                    <MessageSquare size={16} /> Contactar WhatsApp
+                  </a>
                 </div>
               </div>
-
-              <div className="tech-load-indicator">
-                <span>Carga de trabajo:</span>
-                <span className={`load-badge ${
-                  tech.activeTicketsCount === 0 ? 'free' : tech.activeTicketsCount <= 2 ? 'busy' : 'high'
-                }`}>
-                  {tech.activeTicketsCount} tickets activos
-                </span>
-              </div>
-
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
-                <a 
-                  href={`https://wa.me/${tech.phone.replace(/[^0-9]/g, '')}`} 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="wa-link-btn"
-                  style={{ width: '100%', justifyContent: 'center' }}
-                >
-                  <MessageSquare size={16} /> Contactar WhatsApp
-                </a>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </section>
       )}
 
@@ -1736,6 +1840,103 @@ export const BotmaTicketsTool: React.FC<BotmaTicketsToolProps> = ({ onBack }) =>
                 <Send size={16} />
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==========================================================================
+          MODAL: REGISTRAR NUEVO TÉCNICO
+          ========================================================================== */}
+      {isAddTechModalOpen && (
+        <div className="botma-modal-backdrop" onClick={() => setIsAddTechModalOpen(false)}>
+          <div className="botma-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="botma-modal-header">
+              <h3><UserPlus size={20} /> Registrar Nuevo Técnico</h3>
+              <button className="btn-close-modal" onClick={() => setIsAddTechModalOpen(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddTechnician}>
+              <div className="botma-modal-body">
+                <div>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>
+                    Nombre Completo del Técnico *
+                  </label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="Ej: Ing. Jorge Valenzuela" 
+                    className="botma-date-input" 
+                    style={{ width: '100%' }}
+                    value={newTechName}
+                    onChange={(e) => setNewTechName(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>
+                      Teléfono WhatsApp
+                    </label>
+                    <input 
+                      type="text" 
+                      placeholder="52155..." 
+                      className="botma-date-input" 
+                      style={{ width: '100%' }}
+                      value={newTechPhone}
+                      onChange={(e) => setNewTechPhone(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>
+                      Especialidad / Área Principal *
+                    </label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="Ej: Redes, Servidores y Fibra" 
+                      className="botma-date-input" 
+                      style={{ width: '100%' }}
+                      value={newTechSpecialty}
+                      onChange={(e) => setNewTechSpecialty(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>
+                    Avatar / Icono del Técnico
+                  </label>
+                  <div className="avatar-emoji-picker">
+                    {['👨‍💻', '👩‍💻', '👨‍🔧', '👩‍🔧', '🧑‍💻', '💻', '🛠️', '⚡'].map(emoji => (
+                      <button 
+                        key={emoji}
+                        type="button"
+                        className={`avatar-emoji-btn ${newTechAvatar === emoji ? 'active' : ''}`}
+                        onClick={() => setNewTechAvatar(emoji)}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                  <button 
+                    type="button" 
+                    className="btn-botma-secondary" 
+                    onClick={() => setIsAddTechModalOpen(false)}
+                  >
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn-botma-primary">
+                    <UserPlus size={16} /> Guardar Técnico
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       )}
