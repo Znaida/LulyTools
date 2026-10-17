@@ -156,7 +156,7 @@ export const BotmaTicketsTool: React.FC<BotmaTicketsToolProps> = ({ onBack }) =>
     // Initialize WhatsApp greeting
     setWaMessages([
       {
-        text: '👋 ¡Hola! Soy el *Bot de Soporte Técnico TI*.\n\nPuedo ayudarte a generar un ticket, agendar una visita técnica o reportar el cierre de un servicio.\n\nEscribe *hola* o pulsa los botones rápidos para comenzar.',
+        text: '👋 ¡Hola! Soy *OpinIA*, tu asistente de Soporte Técnico TI.\n\nPuedo ayudarte a generar un ticket, agendar una visita técnica o reportar el cierre de un servicio.\n\nEscribe *hola* o pulsa los botones rápidos para comenzar.',
         direction: 'in',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
@@ -650,7 +650,7 @@ export const BotmaTicketsTool: React.FC<BotmaTicketsToolProps> = ({ onBack }) =>
       if (activeTickets.length === 0) {
         reply(`ℹ️ Actualmente no hay tickets de soporte activos.`);
       } else {
-        let msg = `📋 *TICKETS ACTIVOS EN SISTEMA*:\n\n`;
+        let msg = `📋 *OpinIA - TICKETS ACTIVOS*:\n\n`;
         activeTickets.slice(0, 4).forEach(t => {
           msg += `• *#${t.code}*: ${t.reason.substring(0, 45)}...\n  ↳ Estado: *${t.status}* | Fecha: ${t.requestedDate} ${t.requestedTime}\n\n`;
         });
@@ -664,7 +664,7 @@ export const BotmaTicketsTool: React.FC<BotmaTicketsToolProps> = ({ onBack }) =>
       case 'IDLE':
         if (text.includes('soporte') || text.includes('ayuda') || text.includes('ticket') || text.includes('hola') || text.includes('buenos')) {
           setBotStep('ASK_NAME');
-          reply(`🤖 *Asistente TI*: Con gusto agendamos tu servicio técnico.\n\nPara empezar, por favor indícame tu *Nombre y Apellido*:`);
+          reply(`🤖 *OpinIA*: Con gusto agendamos tu servicio técnico.\n\nPara empezar, por favor indícame tu *Nombre y Apellido*:`);
         } else {
           reply(`Para agendar un servicio escribe *soporte*, o bien pulsa el botón *📝 Pedir Soporte* abajo.`);
         }
@@ -817,7 +817,7 @@ export const BotmaTicketsTool: React.FC<BotmaTicketsToolProps> = ({ onBack }) =>
           </button>
           <div className="botma-title-group">
             <h2>
-              BOTMA <span className="botma-tag-badge">Soporte TI</span>
+              OpinIA <span className="botma-tag-badge">Soporte TI</span>
             </h2>
             <p>Agenda Operativa, Aprobación de Tickets & Flujo WhatsApp</p>
           </div>
@@ -1661,7 +1661,7 @@ export const BotmaTicketsTool: React.FC<BotmaTicketsToolProps> = ({ onBack }) =>
         <div className="botma-modal-backdrop" onClick={() => setIsSettingsModalOpen(false)}>
           <div className="botma-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="botma-modal-header">
-              <h3><Settings size={20} /> Configuración de BOTMA & WhatsApp</h3>
+              <h3><Settings size={20} /> Configuración de OpinIA & WhatsApp</h3>
               <button className="btn-close-modal" onClick={() => setIsSettingsModalOpen(false)}>
                 <X size={20} />
               </button>
@@ -1760,7 +1760,7 @@ export const BotmaTicketsTool: React.FC<BotmaTicketsToolProps> = ({ onBack }) =>
               <div className="phone-header-left">
                 <div className="phone-bot-avatar">🤖</div>
                 <div className="phone-bot-info">
-                  <h4>Bot Soporte TI</h4>
+                  <h4>OpinIA Bot</h4>
                   <span>en línea</span>
                 </div>
               </div>

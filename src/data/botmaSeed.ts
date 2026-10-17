@@ -42,7 +42,7 @@ export const INITIAL_TECHNICIANS: Technician[] = [
 export const INITIAL_SETTINGS: BotmaSettings = {
   supervisorName: 'Ing. Roberto Fuentes',
   supervisorPhone: '5215500001122',
-  companyName: 'Soporte TI Enterprise',
+  companyName: 'OpinIA Soporte TI Enterprise',
   botPhoneNumber: '5215599008811',
   requireDualConfirmation: true,
   autoNotifyWhatsApp: true

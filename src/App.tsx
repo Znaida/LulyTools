@@ -48,8 +48,8 @@ export function App() {
     },
     {
       id: 'botma-tickets',
-      name: 'Tickets TI & Agenda (BOTMA)',
-      description: 'Agenda interactiva de soporte técnico, asignación a técnicos, validación dual y flujo WhatsApp.',
+      name: 'OpinIA — Tickets & Agenda TI',
+      description: 'Sistema inteligente de soporte técnico, agenda interactiva, asignación a técnicos y flujo WhatsApp.',
       icon: <Headset size={32} className="tool-icon-svg" />,
       category: 'Soporte y Servicios',
       isAvailable: true,
