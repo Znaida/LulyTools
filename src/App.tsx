@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChecklistTool } from './components/ChecklistTool';
 import { GicrLotesTool } from './components/GicrLotesTool';
+import { BotmaTicketsTool } from './components/BotmaTicketsTool';
 import { 
   ClipboardCheck, 
   Sparkles, 
@@ -8,7 +9,8 @@ import {
   FileSpreadsheet, 
   FolderKanban, 
   Layers,
-  Heart
+  Heart,
+  Headset
 } from 'lucide-react';
 import './index.css';
 
@@ -41,6 +43,15 @@ export function App() {
       description: 'Limpia el archivo de lotes y genera resúmenes anuales de ventas, disponibles y pendientes por escriturar.',
       icon: <FileSpreadsheet size={32} className="tool-icon-svg" />,
       category: 'Reportes y Excel',
+      isAvailable: true,
+      tag: 'Nuevo'
+    },
+    {
+      id: 'botma-tickets',
+      name: 'Tickets TI & Agenda (BOTMA)',
+      description: 'Agenda interactiva de soporte técnico, asignación a técnicos, validación dual y flujo WhatsApp.',
+      icon: <Headset size={32} className="tool-icon-svg" />,
+      category: 'Soporte y Servicios',
       isAvailable: true,
       tag: 'Nuevo'
     },
@@ -101,6 +112,8 @@ export function App() {
           <ChecklistTool onBack={() => setActiveTool(null)} />
         ) : activeTool === 'gicr-lotes' ? (
           <GicrLotesTool onBack={() => setActiveTool(null)} />
+        ) : activeTool === 'botma-tickets' ? (
+          <BotmaTicketsTool onBack={() => setActiveTool(null)} />
         ) : (
           <div className="dashboard-home">
             <div className="welcome-banner">

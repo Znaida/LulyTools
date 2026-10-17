@@ -19,8 +19,6 @@ export const ChecklistModal: React.FC<ChecklistModalProps> = ({
   record,
   onSave,
 }) => {
-  if (!isOpen) return null;
-
   const [period, setPeriod] = useState<string>(record ? record.period : '');
   const [formData, setFormData] = useState<MonthlyChecklistData>(
     record ? JSON.parse(JSON.stringify(record.items)) : JSON.parse(JSON.stringify(DEFAULT_CHECKLIST_DATA))
@@ -30,6 +28,18 @@ export const ChecklistModal: React.FC<ChecklistModalProps> = ({
   );
   const [isSaving, setIsSaving] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  React.useEffect(() => {
+    if (record) {
+      setPeriod(record.period);
+      setFormData(JSON.parse(JSON.stringify(record.items)));
+      setStatus(record.status === 'Pendiente' ? 'En progreso' : record.status);
+    } else {
+      setPeriod('');
+      setFormData(JSON.parse(JSON.stringify(DEFAULT_CHECKLIST_DATA)));
+      setStatus('En progreso');
+    }
+  }, [record, isOpen]);
 
   const handleFiscalChange = (person: string) => {
     setFormData(prev => ({
@@ -132,6 +142,8 @@ export const ChecklistModal: React.FC<ChecklistModalProps> = ({
   // Split fiscal people into two columns matching the physical image
   const leftFiscal = FISCAL_PEOPLE.slice(0, 10);
   const rightFiscal = FISCAL_PEOPLE.slice(10);
+
+  if (!isOpen) return null;
 
   return (
     <div className="modal-overlay">

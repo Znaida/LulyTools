@@ -74,3 +74,69 @@ export const DEFAULT_CHECKLIST_DATA: MonthlyChecklistData = {
   otros: false,
   observations: '',
 };
+
+// ==========================================
+// BOTMA - Tickets de Soporte TI y Agenda
+// ==========================================
+
+export type TicketStatus = 
+  | 'PENDING_APPROVAL' 
+  | 'APPROVED' 
+  | 'IN_PROGRESS' 
+  | 'WAITING_USER_CONFIRMATION' 
+  | 'CLOSED' 
+  | 'REJECTED';
+
+export type TicketPriority = 'baja' | 'media' | 'alta' | 'urgente';
+
+export interface TicketHistoryItem {
+  timestamp: string;
+  author: string;
+  action: string;
+  details: string;
+}
+
+export interface Ticket {
+  id: string;
+  code: string;
+  requesterName: string;
+  requesterPhone: string;
+  department: string;
+  reason: string;
+  requestedDate: string;
+  requestedTime: string;
+  priority: TicketPriority;
+  status: TicketStatus;
+  technicianId: string | null;
+  technicianName: string | null;
+  technicianPhone?: string;
+  supervisorNotes?: string;
+  technicianNotes?: string;
+  userFeedback?: string;
+  userRating?: number | null;
+  createdAt: string;
+  approvedAt?: string | null;
+  completedByTechnicianAt?: string | null;
+  confirmedByUserAt?: string | null;
+  history: TicketHistoryItem[];
+}
+
+export interface Technician {
+  id: string;
+  name: string;
+  phone: string;
+  specialty: string;
+  avatar: string;
+  active: boolean;
+  activeTicketsCount: number;
+}
+
+export interface BotmaSettings {
+  supervisorName: string;
+  supervisorPhone: string;
+  companyName: string;
+  botPhoneNumber: string;
+  requireDualConfirmation: boolean;
+  autoNotifyWhatsApp: boolean;
+}
+
