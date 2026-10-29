@@ -301,7 +301,15 @@ export const ChecklistTool: React.FC<ChecklistToolProps> = ({ onBack }) => {
             </div>
             <p className="db-status-text">{dbStatusMsg}</p>
             <div className="db-status-help">
-              <strong>Solución común:</strong> Si dice que la tabla no existe, entra a tu panel de Supabase &rarr; <em>SQL Editor</em> y ejecuta el script <code>supabase_schema.sql</code>.
+              {dbStatusMsg.includes('PGRST125') ? (
+                <>
+                  <strong>Solución rápida para PGRST125:</strong> Ve a Supabase &rarr; <em>SQL Editor</em> y ejecuta: <code>NOTIFY pgrst, 'reload schema';</code> para que el servidor reconozca la tabla tras la restauración.
+                </>
+              ) : (
+                <>
+                  <strong>Solución común:</strong> Si dice que la tabla no existe, entra a tu panel de Supabase &rarr; <em>SQL Editor</em> y ejecuta el script <code>supabase_schema.sql</code>.
+                </>
+              )}
             </div>
           </div>
           <button onClick={() => loadData()} className="btn-refresh-status">
