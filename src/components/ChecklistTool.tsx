@@ -60,12 +60,12 @@ export const ChecklistTool: React.FC<ChecklistToolProps> = ({ onBack }) => {
                 try {
                   const { data: inserted, error: insErr } = await supabase
                     .from('monthly_checklists')
-                    .insert([{
+                    .upsert([{
                       period: item.period,
                       items: item.items,
                       status: item.status,
                       observations: item.observations || ''
-                    }])
+                    }], { onConflict: 'period' })
                     .select();
 
                   if (insErr) throw insErr;
@@ -207,12 +207,12 @@ export const ChecklistTool: React.FC<ChecklistToolProps> = ({ onBack }) => {
         try {
           const { data, error } = await supabase
             .from('monthly_checklists')
-            .insert([{
+            .upsert([{
               period,
               items,
               status,
               observations: items.observations || ''
-            }])
+            }], { onConflict: 'period' })
             .select();
 
           if (error) {
