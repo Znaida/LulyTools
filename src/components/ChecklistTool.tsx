@@ -29,9 +29,47 @@ export const ChecklistTool: React.FC<ChecklistToolProps> = ({ onBack }) => {
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        if (data) {
-          setRecords(data as ChecklistRecord[]);
+        
+        let finalRecords = (data || []) as ChecklistRecord[];
+
+        // Sincronización inteligente: verificar si hay registros en localStorage no subidos a Supabase
+        const localSaved = localStorage.getItem(STORAGE_KEY);
+        if (localSaved) {
+          try {
+            const localRecords: ChecklistRecord[] = JSON.parse(localSaved);
+            const unsynced = localRecords.filter(loc => 
+              loc.period && !finalRecords.some(rem => rem.period === loc.period || rem.id === loc.id)
+            );
+
+            if (unsynced.length > 0) {
+              console.log(`Sincronizando ${unsynced.length} registros locales hacia Supabase...`);
+              for (const item of unsynced) {
+                try {
+                  const { data: inserted } = await supabase
+                    .from('monthly_checklists')
+                    .insert([{
+                      period: item.period,
+                      items: item.items,
+                      status: item.status,
+                      observations: item.observations || ''
+                    }])
+                    .select();
+
+                  if (inserted && inserted[0]) {
+                    finalRecords = [inserted[0] as ChecklistRecord, ...finalRecords];
+                  }
+                } catch (insertErr) {
+                  console.warn('Error subiendo registro local no sincronizado:', insertErr);
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('Error parseando localStorage para sincronización:', e);
+          }
         }
+
+        setRecords(finalRecords);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(finalRecords));
       } catch (err) {
         console.warn('Supabase request failed, loading local fallback:', err);
         loadLocalFallback();
