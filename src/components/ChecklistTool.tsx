@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import type { ChecklistRecord, MonthlyChecklistData } from '../types';
 import { DEFAULT_CHECKLIST_DATA } from '../types';
-import { supabase } from '../supabaseClient';
+import { supabase, rawSupabaseUrl, rawSupabaseAnonKey } from '../supabaseClient';
 import { ChecklistModal } from './ChecklistModal';
-import { Plus, Edit3, Trash2, CheckCircle2, Clock, Calendar, Search, FileText } from 'lucide-react';
+import { Plus, Edit3, Trash2, CheckCircle2, Clock, Calendar, Search, FileText, AlertCircle, RefreshCw, CloudOff } from 'lucide-react';
 
 interface ChecklistToolProps {
   onBack: () => void;
@@ -18,18 +18,31 @@ export const ChecklistTool: React.FC<ChecklistToolProps> = ({ onBack }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<ChecklistRecord | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [dbStatus, setDbStatus] = useState<'checking' | 'connected' | 'error' | 'unconfigured'>('checking');
+  const [dbStatusMsg, setDbStatusMsg] = useState<string>('');
 
   const loadData = async () => {
     setLoading(true);
-    if (supabase) {
+    if (!supabase || !rawSupabaseUrl || !rawSupabaseAnonKey) {
+      setDbStatus('unconfigured');
+      setDbStatusMsg('Las variables VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY no están configuradas en Vercel (o no se ha hecho Redeploy).');
+      loadLocalFallback();
+    } else {
       try {
         const { data, error } = await supabase
           .from('monthly_checklists')
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+          setDbStatus('error');
+          setDbStatusMsg(`Error de Supabase: ${error.message} (Código ${error.code}). Verifica si creaste la tabla ejecutando supabase_schema.sql en el SQL Editor.`);
+          throw error;
+        }
         
+        setDbStatus('connected');
+        setDbStatusMsg('Conectado a Supabase en la nube. Sincronización en tiempo real activa.');
+
         let finalRecords = (data || []) as ChecklistRecord[];
 
         // Sincronización inteligente: verificar si hay registros en localStorage no subidos a Supabase
@@ -45,7 +58,7 @@ export const ChecklistTool: React.FC<ChecklistToolProps> = ({ onBack }) => {
               console.log(`Sincronizando ${unsynced.length} registros locales hacia Supabase...`);
               for (const item of unsynced) {
                 try {
-                  const { data: inserted } = await supabase
+                  const { data: inserted, error: insErr } = await supabase
                     .from('monthly_checklists')
                     .insert([{
                       period: item.period,
@@ -55,6 +68,7 @@ export const ChecklistTool: React.FC<ChecklistToolProps> = ({ onBack }) => {
                     }])
                     .select();
 
+                  if (insErr) throw insErr;
                   if (inserted && inserted[0]) {
                     finalRecords = [inserted[0] as ChecklistRecord, ...finalRecords];
                   }
@@ -74,8 +88,6 @@ export const ChecklistTool: React.FC<ChecklistToolProps> = ({ onBack }) => {
         console.warn('Supabase request failed, loading local fallback:', err);
         loadLocalFallback();
       }
-    } else {
-      loadLocalFallback();
     }
     setLoading(false);
   };
@@ -124,7 +136,11 @@ export const ChecklistTool: React.FC<ChecklistToolProps> = ({ onBack }) => {
 
     if (supabase) {
       try {
-        await supabase.from('monthly_checklists').delete().eq('id', id);
+        const { error } = await supabase.from('monthly_checklists').delete().eq('id', id);
+        if (error) {
+          console.error('Error deleting from Supabase:', error);
+          alert(`Atención: Falló la eliminación en Supabase (${error.message}). Se eliminó solo localmente.`);
+        }
       } catch (err) {
         console.error('Error deleting from Supabase:', err);
       }
@@ -145,22 +161,30 @@ export const ChecklistTool: React.FC<ChecklistToolProps> = ({ onBack }) => {
         period,
         items,
         status,
+        observations: items.observations || '',
         updated_at: now
       };
 
       if (supabase) {
         try {
-          await supabase
+          const { error } = await supabase
             .from('monthly_checklists')
             .update({
               period,
               items,
               status,
+              observations: items.observations || '',
               updated_at: now
             })
             .eq('id', selectedRecord.id);
-        } catch (err) {
+
+          if (error) {
+            console.error('Error updating Supabase:', error);
+            alert(`Aviso: Se guardó en tu navegador, pero Supabase reportó un error: ${error.message}`);
+          }
+        } catch (err: any) {
           console.error('Error updating Supabase:', err);
+          alert(`Aviso: Error de red con Supabase: ${err?.message || 'Error de conexión'}`);
         }
       }
 
@@ -174,28 +198,32 @@ export const ChecklistTool: React.FC<ChecklistToolProps> = ({ onBack }) => {
         period,
         items,
         status,
-        observations: items.observations,
+        observations: items.observations || '',
         created_at: now,
         updated_at: now
       };
 
       if (supabase) {
         try {
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from('monthly_checklists')
             .insert([{
               period,
               items,
               status,
-              observations: items.observations
+              observations: items.observations || ''
             }])
             .select();
 
-          if (data && data[0]) {
+          if (error) {
+            console.error('Error inserting into Supabase:', error);
+            alert(`Aviso: Guardado en este equipo, pero no se pudo subir a Supabase: ${error.message}`);
+          } else if (data && data[0]) {
             newRecord = data[0] as ChecklistRecord;
           }
-        } catch (err) {
+        } catch (err: any) {
           console.error('Error inserting into Supabase:', err);
+          alert(`Aviso: Error de conexión con Supabase: ${err?.message || 'Error de conexión'}`);
         }
       }
 
@@ -219,11 +247,68 @@ export const ChecklistTool: React.FC<ChecklistToolProps> = ({ onBack }) => {
           <h1 className="tool-title">CheckList Inicio de Mes</h1>
           <p className="tool-subtitle">Historial de revisiones de inicio de mes de Luly</p>
         </div>
-        <button onClick={handleCreateNew} className="btn btn-primary shadow-glow">
-          <Plus size={18} />
-          Nuevo Checklist
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <button onClick={() => loadData()} className="btn btn-secondary" title="Sincronizar y refrescar datos de la nube">
+            <RefreshCw size={16} className={loading ? "spin" : ""} />
+            Sincronizar
+          </button>
+          <button onClick={handleCreateNew} className="btn btn-primary shadow-glow">
+            <Plus size={18} />
+            Nuevo Checklist
+          </button>
+        </div>
       </div>
+
+      {/* Cloud / Database Status Alert */}
+      {dbStatus === 'connected' && (
+        <div className="db-status-banner db-status-connected">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span className="db-dot green"></span>
+            <span><strong>Nube Activa (Supabase):</strong> Conectado. Tus checklists se sincronizan automáticamente con la computadora de tu mamá.</span>
+          </div>
+          <button onClick={() => loadData()} className="btn-refresh-status" title="Sincronizar ahora">
+            <RefreshCw size={14} className={loading ? "spin" : ""} /> Refrescar
+          </button>
+        </div>
+      )}
+
+      {dbStatus === 'unconfigured' && (
+        <div className="db-status-banner db-status-warning">
+          <div className="db-status-content">
+            <div className="db-status-title">
+              <CloudOff size={18} />
+              <strong>Modo Local Desconectado (Faltan variables en Vercel)</strong>
+            </div>
+            <p className="db-status-text">
+              La aplicación no tiene configuradas las credenciales de Supabase en Vercel. Por esta razón, lo que crees tú se guarda solo en tu equipo, y lo que crea tu mamá se queda en el de ella.
+            </p>
+            <div className="db-status-help">
+              <strong>Solución:</strong> Ve a tu proyecto en <em>Vercel &rarr; Settings &rarr; Environment Variables</em>, agrega <code>VITE_SUPABASE_URL</code> y <code>VITE_SUPABASE_ANON_KEY</code>, y haz clic en <em>Redeploy</em>.
+            </div>
+          </div>
+          <button onClick={() => loadData()} className="btn-refresh-status">
+            <RefreshCw size={14} /> Reintentar
+          </button>
+        </div>
+      )}
+
+      {dbStatus === 'error' && (
+        <div className="db-status-banner db-status-error">
+          <div className="db-status-content">
+            <div className="db-status-title">
+              <AlertCircle size={18} />
+              <strong>Error de Comunicación con Supabase</strong>
+            </div>
+            <p className="db-status-text">{dbStatusMsg}</p>
+            <div className="db-status-help">
+              <strong>Solución común:</strong> Si dice que la tabla no existe, entra a tu panel de Supabase &rarr; <em>SQL Editor</em> y ejecuta el script <code>supabase_schema.sql</code>.
+            </div>
+          </div>
+          <button onClick={() => loadData()} className="btn-refresh-status">
+            <RefreshCw size={14} /> Reintentar
+          </button>
+        </div>
+      )}
 
       {/* Search & Stats Bar */}
       <div className="filter-bar">
